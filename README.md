@@ -23,6 +23,8 @@ Contact form
 
 About page
 
+🔗 Live Demo: https://e-commerce-js-beta.vercel.app/
+
 🗂 Pages
 
 Page	File
@@ -116,4 +118,4 @@ This project is free for personal and commercial use.
 
 🙌 Credits
 Developed with ❤️ by Ahmed Ashraf
-🔗 Live Demo: https://e-commerce-js-beta.vercel.app/
+
