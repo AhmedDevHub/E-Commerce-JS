@@ -1,0 +1,60 @@
+@import url("../components/navbar/nav.css");
+@import url("../components/footer/footer.css");
+:root {
+    --dark-color: #19283f;
+    --green-color: #33d1cc;
+    --yellow-color: #ffc400;
+}
+
+
+
+/* start product css */
+
+.small-img-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+.small-img-col {
+    flex-basis: 24%;
+    cursor: pointer;
+}
+
+.sproduct select {
+    display: block;
+    padding: 5px 10px;
+}
+
+.sproduct input {
+    width: 50px;
+    height: 40px;
+    padding-left: 10px;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.sproduct input:focus {
+    outline: none;
+}
+
+.buy-btn {
+    opacity: 1;
+    transition: 0.3s all;
+}
+
+/* end product css  */
+
+/* start related product css  */
+
+.main-title ::after {
+    content: '';
+    width: 120px;
+    height: 2px;
+    background-color: rgb(218, 216, 132);
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* end related product css  */

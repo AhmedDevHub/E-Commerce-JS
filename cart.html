@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./images/favicon.png" />
+
+    <title>Cart - Exclusive</title>
+    <!-- for alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'></link>
+    <!--  -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+    <script src="script/backtotop.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css?family=Spartan"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style/style.css" />
+
+  </head>
+  <body id="main">
+    <section id="header">
+      <!-- Navbar will be loaded here by JavaScript -->
+    </section>
+
+    <div class="breadcrumb-container">
+      <div class="container">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Cart</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <section class="cart-container">
+      <div class="cart-header">
+        <h1>Your Cart</h1>
+      </div>
+      
+      <div id="cart-content">
+        <!-- Cart content will be loaded here by JavaScript -->
+      </div>
+      
+      <div id="empty-cart" class="empty-cart" style="display: none;">
+        <p>Your cart is empty.</p>
+        <a href="index.html">Continue Shopping</a>
+      </div>
+    </section>
+
+    <div id="footer">
+      <!-- Footer will be loaded here by JavaScript -->
+    </div>
+    
+    <script src="components/navbar/nav.js"></script>
+    <script src="components/footer/footer.js"></script>
+    <script src="script/products_arr.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get cart from localStorage - check both possible storage keys
+        let cart = [];
+        console.log('Checking localStorage for cart items...');
+        
+        // Check all possible localStorage keys that might contain cart data
+        if (localStorage.getItem('myitems')) {
+          cart = JSON.parse(localStorage.getItem('myitems'));
+          console.log('Found cart items in "myitems":', cart);
+        } else if (localStorage.getItem('items')) {
+          cart = JSON.parse(localStorage.getItem('items'));
+          console.log('Found cart items in "items":', cart);
+        } else {
+          console.log('No cart items found in localStorage');
+        }
+        
+        // Get wishlist from localStorage
+        const wishlist = localStorage.getItem('wishlist') ? JSON.parse(localStorage.getItem('wishlist')) : [];
+        console.log('Wishlist items:', wishlist);
+        
+        const cartContent = document.getElementById('cart-content');
+        const emptyCart = document.getElementById('empty-cart');
+        
+        // Show empty message if cart is empty
+        if (!cart || cart.length === 0) {
+          console.log('Cart is empty, showing empty cart message');
+          emptyCart.style.display = 'block';
+          return;
+        }
+        
+        console.log('Cart data structure:', cart);
+        console.log('First cart item:', cart[0]);
+        console.log('Products array:', products);
+        
+        // Check if cart items contain product_id or pid
+        const hasProductId = cart[0].hasOwnProperty('product_id');
+        const hasPid = cart[0].hasOwnProperty('pid');
+        
+        console.log('Cart items have product_id:', hasProductId);
+        console.log('Cart items have pid:', hasPid);
+        
+        // Create a map to count duplicate products
+        const cartMap = new Map();
+        
+        cart.forEach(item => {
+          let productId;
+          let productData;
+          
+          // Handle different cart item structures
+          if (hasProductId) {
+            // If the cart item is the full product object
+            productId = item.product_id;
+            productData = item;
+          } else if (hasPid) {
+            // If the cart item has a pid reference to products array
+            productId = item.pid;
+            // Get product data from products array (adjust index if needed)
+            productData = products[item.pid - 1]; // Assuming pid is 1-based index
+            console.log('Found product in products array:', productData);
+          } else {
+            console.log('Unknown cart item structure:', item);
+            return;
+          }
+          
+          if (cartMap.has(productId)) {
+            cartMap.set(productId, {
+              product: productData,
+              quantity: cartMap.get(productId).quantity + 1,
+              size: item.size // Preserve size information if available
+            });
+          } else {
+            cartMap.set(productId, {
+              product: productData,
+              quantity: 1,
+              size: item.size // Preserve size information if available
+            });
+          }
+        });
+        
+        console.log('Processed cart map:', Array.from(cartMap.entries()));
+        
+        // Calculate total
+        let subtotal = 0;
+        
+        // Generate cart HTML
+        let cartHTML = `
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        // Add cart items
+        cartMap.forEach((value, key) => {
+          const product = value.product;
+          const quantity = value.quantity;
+          const size = value.size || 'N/A';
+          
+          // Make sure price is a number by removing any non-numeric characters
+          const price = parseFloat(product.price.toString().replace(/[^\d.-]/g, ''));
+          const itemSubtotal = price * quantity;
+          subtotal += itemSubtotal;
+          
+          // Check if product is in wishlist
+          let productIndex;
+          if (hasProductId) {
+            // Find the index in products array that matches this product_id
+            productIndex = products.findIndex(p => p.product_id === product.product_id);
+          } else if (hasPid) {
+            productIndex = key - 1; // Assuming pid is 1-based index
+          }
+          
+          const isInWishlist = wishlist.includes(productIndex);
+          const wishlistBtnClass = isInWishlist ? 'in-wishlist' : '';
+          
+          console.log('Rendering product:', product);
+          console.log('Price:', price, 'Quantity:', quantity, 'Subtotal:', itemSubtotal);
+          console.log('Product index:', productIndex, 'Is in wishlist:', isInWishlist);
+          
+          cartHTML += `
+            <tr data-id="${key}">
+              <td>
+                <div class="product-col">
+                  <img src="${product.product_img}" alt="${product.product_name}" class="product-image">
+                  <div class="product-info">
+                    <h3>${product.product_name}</h3>
+                    <p>${product.category}</p>
+                    ${size ? `<p>Size: ${size}</p>` : ''}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="price">${price} EGP</span>
+              </td>
+              <td>
+                <div class="quantity-control">
+                  <button class="quantity-btn decrease-btn" data-id="${key}">-</button>
+                  <input type="number" class="quantity-input" value="${quantity}" min="1" data-id="${key}">
+                  <button class="quantity-btn increase-btn" data-id="${key}">+</button>
+                </div>
+              </td>
+              <td>
+                <span class="price">${itemSubtotal} EGP</span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="remove-btn" data-id="${key}">
+                    <i class="bi bi-x"></i>
+                  </button>
+                  <button class="wishlist-btn ${wishlistBtnClass}" data-index="${productIndex}" onclick="toggleWishlist(${productIndex})">
+                    <i class="bi bi-heart${isInWishlist ? '-fill' : ''}"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+        
+        cartHTML += `
+            </tbody>
+          </table>
+          
+          <div class="cart-actions">
+            <button class="return-btn" onclick="location.href='index.html'">Return To Shop</button>
+            <button class="update-btn" id="update-cart-btn">Update Cart</button>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="coupon-section">
+                <input type="text" id="coupon-code" class="coupon-input" placeholder="Coupon Code">
+                <button class="apply-btn" id="apply-coupon">Apply Coupon</button>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="cart-summary">
+                <h2 class="summary-title">Cart Total</h2>
+                <div class="summary-row">
+                  <span>Subtotal:</span>
+                  <span id="cart-subtotal">${subtotal} EGP</span>
+                </div>
+                <div class="summary-row">
+                  <span>Shipping:</span>
+                  <span>Free</span>
+                </div>
+                <div class="summary-row total">
+                  <span>Total:</span>
+                  <span id="cart-total">${subtotal} EGP</span>
+                </div>
+                <button class="checkout-btn" id="checkout-btn">Proceed to checkout</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        cartContent.innerHTML = cartHTML;
+        console.log('Cart HTML rendered');
+        
+        // Add event listeners after the cart HTML is rendered
+        setupEventListeners();
+        
+        // Apply coupon button
+        const applyCouponBtn = document.getElementById('apply-coupon');
+        if (applyCouponBtn) {
+          applyCouponBtn.addEventListener('click', function() {
+            const couponCode = document.getElementById('coupon-code').value;
+            applyCoupon(couponCode);
+          });
+        }
+        
+        // Update cart button
+        const updateCartBtn = document.getElementById('update-cart-btn');
+        if (updateCartBtn) {
+          updateCartBtn.addEventListener('click', function() {
+            location.reload();
+          });
+        }
+        
+        // Checkout button
+        const checkoutBtn = document.getElementById('checkout-btn');
+        if (checkoutBtn) {
+          checkoutBtn.addEventListener('click', function() {
+            proceedToCheckout();
+          });
+        }
+      });
+      
+      // Setup event listeners for quantity buttons and remove buttons
+      function setupEventListeners() {
+        // Add event listeners for quantity inputs
+        document.querySelectorAll('.quantity-input').forEach(input => {
+          input.addEventListener('change', function() {
+            const productId = parseInt(this.getAttribute('data-id'));
+            const quantity = parseInt(this.value) || 1;
+            if (quantity >= 1) {
+              updateQuantity(productId, quantity);
+            }
+          });
+        });
+        
+        // Add event listeners for decrease buttons
+        document.querySelectorAll('.decrease-btn').forEach(button => {
+          button.addEventListener('click', function() {
+            const productId = parseInt(this.getAttribute('data-id'));
+            const input = this.nextElementSibling;
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue > 1) {
+              input.value = currentValue - 1;
+              updateQuantity(productId, currentValue - 1);
+            }
+          });
+        });
+        
+        // Add event listeners for increase buttons
+        document.querySelectorAll('.increase-btn').forEach(button => {
+          button.addEventListener('click', function() {
+            const productId = parseInt(this.getAttribute('data-id'));
+            const input = this.previousElementSibling;
+            const currentValue = parseInt(input.value) || 1;
+            input.value = currentValue + 1;
+            updateQuantity(productId, currentValue + 1);
+          });
+        });
+        
+        // Add event listeners for remove buttons
+        document.querySelectorAll('.remove-btn').forEach(button => {
+          button.addEventListener('click', function() {
+            const productId = parseInt(this.getAttribute('data-id'));
+            removeFromCart(productId);
+          });
+        });
+      }
+      
+      // Function to update quantity
+      function updateQuantity(productId, quantity) {
+        if (quantity < 1) return;
+        
+        let cart = [];
+        let storageKey = 'myitems';
+        
+        // Check which localStorage key is being used
+        if (localStorage.getItem('myitems')) {
+          cart = JSON.parse(localStorage.getItem('myitems'));
+        } else if (localStorage.getItem('items')) {
+          cart = JSON.parse(localStorage.getItem('items'));
+          storageKey = 'items';
+        }
+        
+        // Handle different cart item structures
+        const hasProductId = cart[0] && cart[0].hasOwnProperty('product_id');
+        const hasPid = cart[0] && cart[0].hasOwnProperty('pid');
+        
+        let productToKeep;
+        
+        if (hasProductId) {
+          // If cart items are full product objects
+          productToKeep = cart.find(item => item.product_id === productId);
+          cart = cart.filter(item => item.product_id !== productId);
+        } else if (hasPid) {
+          // If cart items have pid references
+          productToKeep = cart.find(item => item.pid === productId);
+          cart = cart.filter(item => item.pid !== productId);
+        }
+        
+        if (productToKeep) {
+          // Add the product back the specified number of times
+          for (let i = 0; i < quantity; i++) {
+            cart.push(productToKeep);
+          }
+          
+          localStorage.setItem(storageKey, JSON.stringify(cart));
+          
+          // Update subtotal
+          let price;
+          if (hasProductId) {
+            price = parseFloat(productToKeep.price.toString().replace(/[^\d.-]/g, ''));
+          } else if (hasPid) {
+            price = parseFloat(products[productToKeep.pid - 1].price.toString().replace(/[^\d.-]/g, ''));
+          }
+          
+          const itemSubtotal = price * quantity;
+          const subtotalElement = document.querySelector(`tr[data-id="${productId}"] .price:last-child`);
+          if (subtotalElement) {
+            subtotalElement.textContent = `${itemSubtotal} EGP`;
+          }
+          
+          // Update quantity input value
+          const quantityInput = document.querySelector(`tr[data-id="${productId}"] .quantity-input`);
+          if (quantityInput) {
+            quantityInput.value = quantity;
+          }
+          
+          // Update cart total
+          updateCartTotal();
+          
+          // Update cart count in navbar
+          document.dispatchEvent(new CustomEvent('cartUpdated'));
+          
+          // Show notification
+          showNotification(`Quantity updated to ${quantity}`, 'success');
+        }
+      }
+      
+      // Function to update quantity from input
+      function updateQuantityInput(productId, value) {
+        updateQuantity(productId, parseInt(value) || 1);
+      }
+      
+      // Function to remove item from cart
+      function removeFromCart(productId) {
+        let cart = [];
+        let storageKey = 'myitems';
+        
+        // Check which localStorage key is being used
+        if (localStorage.getItem('myitems')) {
+          cart = JSON.parse(localStorage.getItem('myitems'));
+        } else if (localStorage.getItem('items')) {
+          cart = JSON.parse(localStorage.getItem('items'));
+          storageKey = 'items';
+        }
+        
+        // Handle different cart item structures
+        const hasProductId = cart[0] && cart[0].hasOwnProperty('product_id');
+        const hasPid = cart[0] && cart[0].hasOwnProperty('pid');
+        
+        if (hasProductId) {
+          // If cart items are full product objects
+          cart = cart.filter(item => item.product_id !== productId);
+        } else if (hasPid) {
+          // If cart items have pid references
+          cart = cart.filter(item => item.pid !== productId);
+        }
+        
+        localStorage.setItem(storageKey, JSON.stringify(cart));
+        
+        // Remove item from DOM
+        const itemElement = document.querySelector(`tr[data-id="${productId}"]`);
+        if (itemElement) {
+          itemElement.remove();
+        }
+        
+        // Update cart total
+        updateCartTotal();
+        
+        // Show empty message if cart is now empty
+        if (cart.length === 0) {
+          document.getElementById('cart-content').innerHTML = '';
+          document.getElementById('empty-cart').style.display = 'block';
+        }
+        
+        // Update cart count in navbar
+        updateCartCount();
+        
+        // Show notification
+        showNotification('Product removed from cart!', 'info');
+      }
+      
+      // Function to update cart
+      function updateCart() {
+        location.reload();
+      }
+      
+      // Function to apply coupon
+      function applyCoupon(code) {
+        let discount = 0;
+        
+        switch (code.toLowerCase()) {
+          case 'dejavo20':
+            discount = 0.2;
+            break;
+          case 'exclusive10':
+            discount = 0.1;
+            break;
+          case 'sale15':
+            discount = 0.15;
+            break;
+          default:
+            showNotification('Invalid coupon code', 'error');
+            return;
+        }
+        
+        // Get subtotal
+        const subtotalElement = document.getElementById('cart-subtotal');
+        const subtotal = parseFloat(subtotalElement.textContent);
+        
+        // Calculate new total
+        const discountAmount = subtotal * discount;
+        const newTotal = subtotal - discountAmount;
+        
+        // Update total
+        const totalElement = document.getElementById('cart-total');
+        totalElement.textContent = `${newTotal.toFixed(2)} EGP`;
+        
+        // Show success message
+        showNotification(`Coupon applied! You saved ${discountAmount.toFixed(2)} EGP`, 'success');
+      }
+      
+      // Function to update cart total
+      function updateCartTotal() {
+        let cart = [];
+        
+        // Check which localStorage key is being used
+        if (localStorage.getItem('myitems')) {
+          cart = JSON.parse(localStorage.getItem('myitems'));
+        } else if (localStorage.getItem('items')) {
+          cart = JSON.parse(localStorage.getItem('items'));
+        }
+        
+        if (!cart || cart.length === 0) return;
+        
+        // Handle different cart item structures
+        const hasProductId = cart[0].hasOwnProperty('product_id');
+        const hasPid = cart[0].hasOwnProperty('pid');
+        
+        // Create a map to count duplicate products
+        const cartMap = new Map();
+        
+        cart.forEach(item => {
+          let productId, price;
+          
+          if (hasProductId) {
+            productId = item.product_id;
+            price = parseFloat(item.price.toString().replace(/[^\d.-]/g, ''));
+          } else if (hasPid) {
+            productId = item.pid;
+            price = parseFloat(products[item.pid - 1].price.toString().replace(/[^\d.-]/g, ''));
+          }
+          
+          if (cartMap.has(productId)) {
+            cartMap.set(productId, cartMap.get(productId) + price);
+          } else {
+            cartMap.set(productId, price);
+          }
+        });
+        
+        let subtotal = 0;
+        
+        cartMap.forEach((price, productId) => {
+          subtotal += price;
+        });
+        
+        // Update subtotal and total
+        const subtotalElement = document.getElementById('cart-subtotal');
+        const totalElement = document.getElementById('cart-total');
+        
+        if (subtotalElement && totalElement) {
+          subtotalElement.textContent = `${subtotal} EGP`;
+          totalElement.textContent = `${subtotal} EGP`;
+        }
+      }
+      
+      // Function to proceed to checkout
+      function proceedToCheckout() {
+        // Save total to localStorage
+        const totalElement = document.getElementById('cart-total');
+        const total = totalElement.textContent;
+        localStorage.setItem('total', total);
+        
+        // Redirect to checkout page
+        location.href = 'checkout.html';
+      }
+      
+      // Function to update cart count in navbar
+      function updateCartCount() {
+        // Dispatch custom event for navbar to update cart count
+        document.dispatchEvent(new CustomEvent('cartUpdated'));
+      }
+      
+      // Function to show notification
+      function showNotification(message, type) {
+        Swal.fire({
+          position: 'top-end',
+          icon: type,
+          title: message,
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+      
+      // Function to toggle wishlist
+      function toggleWishlist(index) {
+        const wishlist = localStorage.getItem('wishlist') ? JSON.parse(localStorage.getItem('wishlist')) : [];
+        const wishlistBtn = document.querySelector(`button[data-index="${index}"]`);
+        
+        if (wishlist.includes(index)) {
+          wishlist.splice(wishlist.indexOf(index), 1);
+          wishlistBtn.classList.remove('in-wishlist');
+          wishlistBtn.innerHTML = '<i class="bi bi-heart"></i>';
+        } else {
+          wishlist.push(index);
+          wishlistBtn.classList.add('in-wishlist');
+          wishlistBtn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+        }
+        
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="./images/favicon.png" />
+    <title>Wishlist - Exclusive</title>
+    <!-- for alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css'></link>
+    <!--  -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+    />
+    <script src="script/backtotop.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Spartan"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style/wishlist.css">
+    <link rel="stylesheet" href="style/style.css" />
+  </head>
+  <body id="main">
+    <section id="header">
+      <!-- Navbar will be loaded here by JavaScript -->
+    </section>
+
+    <div class="breadcrumb-container">
+      <div class="container">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Wishlist</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <section class="wishlist-container">
+      <div class="wishlist-header">
+        <h1>Wishlist (<span id="wishlist-count">0</span>)</h1>
+        <button class="move-all-btn" id="move-all-to-bag">Move All To Bag</button>
+      </div>
+      
+      <div id="wishlist-items" class="wishlist-items">
+        <!-- Wishlist items will be loaded here by JavaScript -->
+      </div>
+      
+      <div id="wishlist-empty" class="wishlist-empty" style="display: none;">
+        <p>Your wishlist is empty.</p>
+        <a href="index.html">Continue Shopping</a>
+      </div>
+    </section>
+
+    <div id="footer">
+      <!-- Footer will be loaded here by JavaScript -->
+    </div>
+    
+    <script src="components/navbar/nav.js"></script>
+    <script src="components/footer/footer.js"></script>
+    <script src="script/products_arr.js"></script>
+    <script src="script/cart.js"></script>
+<script src="script/wishlist.js"></script>
+  </body>
+</html>
